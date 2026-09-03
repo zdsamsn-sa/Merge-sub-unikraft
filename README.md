@@ -116,6 +116,21 @@ sin  running  https://xxxx.sin.unikraft.app
 5. token 只存在 GitHub Secrets / 运行环境中，不会出现在代码或公开日志里。
 
 ---
+## Cloudflare Worker 反代（域名在 CF 时很方便）
+不改 UKC 配置，用 Worker 把流量转到官方 FQDN。
+JavaScriptexport default {
+  async fetch(req) {
+    const url = new URL(req.url);
+    url.hostname = "xxxx.sin.unikraft.app"; // 换成你的实例 FQDN
+    return fetch(new Request(url, req));
+  },
+};
+
+Worker 绑定你的自定义域即可访问
+支持 WebSocket
+换后端只改一行 hostname
+可叠加 CF 的 WAF / 缓存
+注意：UKC 侧看到的来源 IP 会是 Cloudflare
 
 ## 本地简单验证（可选）
 
