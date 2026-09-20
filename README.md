@@ -67,6 +67,9 @@ sin  running  https://xxxx.sin.unikraft.app
 | 管理界面 | `https://实例域名/` （Basic Auth） |
 | 订阅链接 | `https://实例域名/你的SUB_TOKEN` |
 | CF 优选 | `https://实例域名/你的SUB_TOKEN?CFIP=1.1.1.1&CFPORT=443` |
+| Surge | 管理界面点「查看订阅链接」→ 复制 Surge 项；或 `https://sublink.eooce.com/surge?config=https://实例域名/你的SUB_TOKEN` |
+
+在 Web 界面「查看订阅链接」中可直接复制 **Surge** / **Clash** / **sing-box** 转换链接（点击灰色链接即可复制）。
 
 ---
 

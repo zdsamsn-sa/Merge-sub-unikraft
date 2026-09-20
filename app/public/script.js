@@ -266,9 +266,20 @@ async function showSubscriptionInfo() {
             `${apiUrl}/singbox?config=${currentDomain}/${subToken}`
         );
 
+        // Surge 订阅（点击灰色链接即可复制）
+        const surgeSubLine = createSubscriptionLine(
+            'Surge订阅(Mac/iOS Surge)：',
+            `${apiUrl}/surge?config=${currentDomain}/${subToken}`
+        );
+
+        const surgeCustomSubLine = createSubscriptionLine(
+            'Surge订阅(带优选域名或优选IP)：',
+            `${apiUrl}/surge?config=${encodeURIComponent(currentDomain + '/' + subToken + '?CFIP=time.is&CFPORT=443')}`
+        );
+
         const noteDiv = document.createElement('div');
         noteDiv.className = 'subscription-note';
-        noteDiv.textContent = '提醒：time.is和443可改为更快的优选IP或优选域名和对应的端口。\n部署时可添加API_URL环境变量修改转换地址。\n订阅转换项目：https://github.com/eooce/sub-converter';
+        noteDiv.textContent = '提醒：time.is和443可改为更快的优选IP或优选域名和对应的端口。\n部署时可添加API_URL环境变量修改转换地址。\n订阅转换项目：https://github.com/eooce/sub-converter\n点击上方灰色链接即可复制；Surge中「配置」→「从URL下载」粘贴即可。';
         noteDiv.style.whiteSpace = 'pre-line';
 
         const closeButton = document.createElement('button');
@@ -281,6 +292,8 @@ async function showSubscriptionInfo() {
         alertBox.appendChild(customSubLine);
         alertBox.appendChild(clashSubLine);
         alertBox.appendChild(singboxSubLine);
+        alertBox.appendChild(surgeSubLine);
+        alertBox.appendChild(surgeCustomSubLine);
         alertBox.appendChild(noteDiv);
         alertBox.appendChild(closeButton);
         overlay.appendChild(alertBox);

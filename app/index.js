@@ -816,7 +816,7 @@ app.get('/', function (req, res) {
 // 生成合并订阅
 async function generateMergedSubscription(targetCFIP, targetCFPORT) {
     try {
-        const promises = subscriptions.map(async (subscription) => {
+        const promises = (Array.isArray(subscriptions) ? subscriptions : []).map(async (subscription) => {
             try {
                 const subscriptionContent = await fetchSubscriptionContent(subscription);
                 if (subscriptionContent) {
@@ -825,16 +825,19 @@ async function generateMergedSubscription(targetCFIP, targetCFPORT) {
                     return updatedContent;
                 }
             } catch (error) {
-                console.error(`Error fetching subscription content: ${error}`);
+                console.error(`Error processing subscription [${subscription}]: ${error.message}`);
             }
             return null;
         });
 
         const mergedContentArray = await Promise.all(promises);
-        const mergedContent = mergedContentArray.filter(content => content !== null).join('\n');
+        const mergedContent = mergedContentArray
+            .filter(content => content !== null && String(content).trim())
+            .join('\n');
 
-        const updatedNodes = replaceAddressAndPort(nodes, targetCFIP, targetCFPORT);
-        return `${mergedContent}\n${updatedNodes}`;
+        const updatedNodes = replaceAddressAndPort(nodes || '', targetCFIP, targetCFPORT);
+        const parts = [mergedContent, updatedNodes].filter(p => p && String(p).trim());
+        return parts.join('\n');
     } catch (error) {
         console.error(`Error generating merged subscription: ${error}`);
         throw error;
@@ -843,16 +846,41 @@ async function generateMergedSubscription(targetCFIP, targetCFPORT) {
 
 
 function decodeBase64Content(base64Content) {
-    const decodedContent = Buffer.from(base64Content, 'base64').toString('utf-8');
-    return decodedContent;
+    if (typeof base64Content !== 'string') return '';
+    const trimmed = base64Content.trim();
+    try {
+        const decoded = Buffer.from(trimmed, 'base64').toString('utf-8');
+        if (decoded.includes('://') || decoded.includes('vmess') || decoded.includes('vless') ||
+            decoded.includes('trojan') || decoded.includes('ss://') || decoded.includes('hysteria')) {
+            return decoded;
+        }
+        if (trimmed.includes('://')) return trimmed;
+        return decoded;
+    } catch (e) {
+        return trimmed;
+    }
 }
 
 async function fetchSubscriptionContent(subscription) {
+    if (!subscription || typeof subscription !== 'string') return null;
+    const url = subscription.trim();
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        console.error(`Invalid subscription URL (skip): ${url}`);
+        return null;
+    }
     try {
-        const response = await axios.get(subscription, { timeout: 10000 }); // 无效获取订阅10秒超时
+        const response = await axios.get(url, {
+            timeout: 15000,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; Merge-sub/1.0)',
+                'Accept': 'text/plain, application/json, */*'
+            },
+            maxContentLength: 5 * 1024 * 1024,
+            validateStatus: (status) => status >= 200 && status < 400
+        });
         return response.data;
     } catch (error) {
-        console.error(`Error fetching subscription content: ${error}`);
+        console.error(`Error fetching subscription [${url}]: ${error.message}`);
         return null;
     }
 }
